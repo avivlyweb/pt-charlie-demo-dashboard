@@ -1,7 +1,7 @@
 const CASE_FILES = {
-  low: "../demo_cases/case_low_risk_nl.json",
-  moderate: "../demo_cases/case_moderate_risk_nl.json",
-  high: "../demo_cases/case_high_risk_nl.json",
+  low: "./demo_cases/case_low_risk_nl.json",
+  moderate: "./demo_cases/case_moderate_risk_nl.json",
+  high: "./demo_cases/case_high_risk_nl.json",
 };
 
 const AGENTS = {
@@ -483,21 +483,32 @@ function rebuildScenario(caseData) {
 }
 
 async function loadCase(key) {
-  const res = await fetch(CASE_FILES[key]);
-  const data = await res.json();
-  activeCase = data;
+  try {
+    const res = await fetch(CASE_FILES[key]);
+    if (!res.ok) {
+      throw new Error(`Failed to load ${CASE_FILES[key]} (${res.status})`);
+    }
+    const data = await res.json();
+    activeCase = data;
 
-  document.getElementById("caseTitle").textContent = data.title;
-  document.getElementById("caseDetail").textContent = `${data.patient_profile.name_alias}, ${data.patient_profile.age} jaar • ${data.patient_profile.occupation}`;
+    document.getElementById("caseTitle").textContent = data.title;
+    document.getElementById("caseDetail").textContent = `${data.patient_profile.name_alias}, ${data.patient_profile.age} jaar • ${data.patient_profile.occupation}`;
 
-  rebuildScenario(data);
-  initNetwork();
-  updateInteractionInfo();
-  renderStats(data);
-  renderWorkflow(data);
-  renderValueStory(data);
-  renderTranscript(flatInteractions);
-  buildTimeline();
+    rebuildScenario(data);
+    initNetwork();
+    updateInteractionInfo();
+    renderStats(data);
+    renderWorkflow(data);
+    renderValueStory(data);
+    renderTranscript(flatInteractions);
+    buildTimeline();
+  } catch (err) {
+    console.error(err);
+    document.getElementById("caseTitle").textContent = "Case Load Error";
+    document.getElementById("caseDetail").textContent = "Missing or invalid demo case files";
+    document.getElementById("chatBody").innerHTML = `<div class="chat-empty"><p>⚠️</p><p>${err.message}</p></div>`;
+    document.getElementById("tlLabel").textContent = "Case load failed";
+  }
 }
 
 function initCaseSelector() {

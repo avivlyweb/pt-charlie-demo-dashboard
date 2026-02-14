@@ -1,0 +1,37 @@
+name: Validate Dashboard
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Check required files
+        run: |
+          test -f index.html
+          test -f styles.css
+          test -f app.js
+          test -f demo_cases/case_low_risk_nl.json
+          test -f demo_cases/case_moderate_risk_nl.json
+          test -f demo_cases/case_high_risk_nl.json
+
+      - name: Validate JavaScript syntax
+        run: node --check app.js
+
+      - name: Validate case JSON
+        run: |
+          node -e "JSON.parse(require('fs').readFileSync('demo_cases/case_low_risk_nl.json', 'utf8'));"
+          node -e "JSON.parse(require('fs').readFileSync('demo_cases/case_moderate_risk_nl.json', 'utf8'));"
+          node -e "JSON.parse(require('fs').readFileSync('demo_cases/case_high_risk_nl.json', 'utf8'));"

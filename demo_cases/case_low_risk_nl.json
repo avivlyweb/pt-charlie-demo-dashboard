@@ -1,0 +1,23 @@
+{
+  "case_id": "PTC-DEMO-LOW-001",
+  "title": "Lage complexiteit - vroege klachten, lage psychosociale belasting",
+  "patient_profile": {
+    "name_alias": "Milan",
+    "age": 32,
+    "gender": "man",
+    "occupation": "kantoormedewerker",
+    "work_status": "volledig aan het werk"
+  },
+  "narrative_nl": "Ik heb sinds drie weken lage rugpijn na lang zitten en weinig bewegen. Pijn is 4/10, geen uitstraling onder de knie, geen krachtsverlies, geen koorts, geen nachtzweten, geen onverklaard gewichtsverlies. Ik wil graag weer zonder spanning sporten.",
+  "key_inputs": {
+    "pain_duration": "<6 weken",
+    "pain_intensity_nrs": 4,
+    "odi_pct": 18,
+    "tsk11": 19,
+    "pcs": 10,
+    "hads_a": 5,
+    "hads_d": 3,
+    "red_flags": false
+  },
+  "demo_goal": "Toon snelle triage, geruststelling, basis oefenplan, ergonomisch advies en korte follow-up."
+}

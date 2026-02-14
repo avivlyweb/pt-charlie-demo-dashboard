@@ -1,0 +1,24 @@
+{
+  "case_id": "PTC-DEMO-MOD-001",
+  "title": "Matige complexiteit - recidiverende klachten met psychosociale factoren",
+  "patient_profile": {
+    "name_alias": "Sanne",
+    "age": 44,
+    "gender": "vrouw",
+    "occupation": "teamleider administratie",
+    "work_status": "gedeeltelijk verzuim"
+  },
+  "narrative_nl": "Ik heb al 8 maanden terugkerende lage rugpijn. Pijn is meestal 6/10, soms uitstralend naar bil en bovenbeen. Ik slaap slecht, pieker veel over werk en ben bang dat bewegen mijn rug beschadigt. Ik heb al meerdere keren fysio gehad met wisselend effect.",
+  "key_inputs": {
+    "pain_duration": ">12 weken",
+    "pain_intensity_nrs": 6,
+    "odi_pct": 41,
+    "tsk11": 31,
+    "pcs": 24,
+    "hads_a": 9,
+    "hads_d": 8,
+    "fabq_w_band": "matig-hoog",
+    "red_flags": false
+  },
+  "demo_goal": "Toon risicostratificatie profiel 2, graduele opbouw, psychosociale coaching, werkgerichte adviezen en meetbare reassessment."
+}
