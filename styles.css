@@ -107,6 +107,10 @@ body::before {
   position: relative;
   transition: color 0.3s;
 }
+.nav-link {
+  display: inline-block;
+  text-decoration: none;
+}
 .nav-btn.active { color: var(--text); }
 .nav-btn.active::after {
   content: '';
@@ -335,6 +339,35 @@ body::before {
 .mini-card h3 { font-family: 'Syne', sans-serif; font-size: 0.9rem; margin-bottom: 0.4rem; }
 .mini-card p, .value-card p, .value-card li { font-size: 0.8rem; color: var(--text-dim); }
 .value-card ul { margin-left: 1.2rem; margin-top: 0.5rem; }
+
+.about-content {
+  display: grid;
+  gap: 1rem;
+}
+.about-hero, .about-card, .about-cta {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1rem;
+}
+.about-hero h2, .about-card h3, .about-cta h3 {
+  font-family: 'Syne', sans-serif;
+  margin-bottom: 0.45rem;
+}
+.about-hero p, .about-card p, .about-card li, .about-cta p {
+  color: var(--text-dim);
+  font-size: 0.82rem;
+}
+.about-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(260px,1fr));
+  gap: 0.9rem;
+}
+.about-list {
+  margin-left: 1rem;
+  display: grid;
+  gap: 0.35rem;
+}
 
 .site-footer {
   max-width: 1440px;
