@@ -350,6 +350,26 @@ body::before {
   border-radius: 14px;
   padding: 1rem;
 }
+.lang-toggle {
+  display: inline-flex;
+  gap: 0.35rem;
+  margin-bottom: 0.6rem;
+}
+.lang-btn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  border-radius: 999px;
+  padding: 0.15rem 0.55rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  cursor: pointer;
+}
+.lang-btn.active {
+  color: #dbe6ff;
+  border-color: var(--hoac);
+  background: rgba(77, 143, 255, 0.16);
+}
 .about-hero h2, .about-card h3, .about-cta h3 {
   font-family: 'Syne', sans-serif;
   margin-bottom: 0.45rem;
