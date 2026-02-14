@@ -53,6 +53,7 @@
           <button class="speed-btn" data-speed="2" onclick="setSpeed(2)">2x</button>
           <button class="speed-btn" data-speed="0.5" onclick="setSpeed(0.5)">0.5x</button>
           <button class="speed-btn" data-speed="0.2" onclick="setSpeed(0.2)">0.2x</button>
+          <button class="speed-btn" id="storyBtn" onclick="startStoryMode()">Story Mode</button>
           <button class="replay-btn" id="replayBtn" onclick="replayDebate()">▶ Replay Debate</button>
         </div>
       </div>
@@ -70,6 +71,34 @@
         <div class="insight-card">
           <div class="insight-title">Conflict Heatmap</div>
           <div id="heatmapGrid" class="heatmap-grid"></div>
+        </div>
+      </div>
+
+      <div class="future-strip">
+        <div class="future-card" id="twinCard">
+          <div class="insight-title">Digital Twin Patient</div>
+          <div class="twin-grid">
+            <div class="twin-meter"><span>Pain</span><div class="meter-track"><div id="twinPainFill" class="meter-fill"></div></div><em id="twinPainVal">0</em></div>
+            <div class="twin-meter"><span>Stress</span><div class="meter-track"><div id="twinStressFill" class="meter-fill"></div></div><em id="twinStressVal">0</em></div>
+            <div class="twin-meter"><span>Function</span><div class="meter-track"><div id="twinFuncFill" class="meter-fill"></div></div><em id="twinFuncVal">0</em></div>
+          </div>
+          <div class="twin-note" id="twinNote">Twin sync: waiting for case load.</div>
+        </div>
+        <div class="future-card">
+          <div class="insight-title">Counterfactual Sandbox</div>
+          <div class="sandbox-row">
+            <label for="cfPain">Pain delta</label><input id="cfPain" type="range" min="-3" max="3" value="0"><span id="cfPainVal">0</span>
+          </div>
+          <div class="sandbox-row">
+            <label for="cfStress">Stress delta</label><input id="cfStress" type="range" min="-3" max="3" value="0"><span id="cfStressVal">0</span>
+          </div>
+          <div class="sandbox-row">
+            <label for="cfRedFlag">Force red flag</label><input id="cfRedFlag" type="checkbox">
+          </div>
+          <div class="sandbox-actions">
+            <button class="speed-btn" id="cfApplyBtn">Apply Scenario</button>
+            <button class="speed-btn" id="cfResetBtn">Reset</button>
+          </div>
         </div>
       </div>
 
@@ -125,6 +154,8 @@
           </details>
         </div>
       </section>
+
+      <div class="story-banner" id="storyBanner">Boardroom Story: idle</div>
 
       <div class="network-split">
         <div>

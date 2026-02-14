@@ -20,6 +20,8 @@ let debateMode = "consensus";
 let viewMode = "clinical";
 let activeFilter = null; // { type: 'conn'|'agent', id }
 let activePhase = null;
+let storyRunning = false;
+let scenarioAdjust = { painDelta: 0, stressDelta: 0, forceRedFlag: false };
 let flatInteractions = [];
 let connections = [];
 let pathEls = {};
@@ -134,6 +136,39 @@ function applyDebateMode(base, caseData, mode) {
   return enrichInteractions(adjusted, caseData);
 }
 
+function applyScenarioAdjustments(items, caseData) {
+  const adjusted = items.map((it) => ({ ...it }));
+  const stressUp = scenarioAdjust.stressDelta > 1;
+  const painUp = scenarioAdjust.painDelta > 1;
+  const safer = scenarioAdjust.stressDelta < 0 && scenarioAdjust.painDelta < 0;
+
+  if (stressUp || painUp) {
+    const target = adjusted.find((x) => x.from === "interv" && x.to === "lead");
+    if (target) {
+      target.re = "Partial: verhoogde belastingfactoren vereisen conservatievere opbouw en extra check.";
+      target.st = "partial";
+    }
+  }
+  if (scenarioAdjust.forceRedFlag) {
+    adjusted.forEach((x) => {
+      if (x.from === "ndt" && x.to === "lead") {
+        x.ch += " Counterfactual: nieuwe red-flag trigger gedetecteerd.";
+        x.re = "Accepted: direct escalatiepad geactiveerd.";
+        x.st = "accepted";
+      }
+      if (x.from === "lead" && (x.to === "pathway" || x.to === "audit")) {
+        x.re = "Output shifted to urgent safety handoff.";
+      }
+    });
+  }
+  if (safer) {
+    adjusted.forEach((x) => {
+      if (x.st === "partial") x.st = "accepted";
+    });
+  }
+  return enrichInteractions(adjusted, caseData);
+}
+
 function buildCaseInteractions(caseData, mode = "consensus") {
   const p = caseData.patient_profile;
   const risk = getRiskLabel(caseData);
@@ -154,7 +189,7 @@ function buildCaseInteractions(caseData, mode = "consensus") {
       { n: 11, from: "ndt", to: "lead", ch: "Risico: hoog, red flags bevestigd.", re: "Accepted.", st: "accepted" },
       { n: 12, from: "lead", to: "audit", ch: "Eindsynthese vrijgeven met veiligheidsprioriteit.", re: "Output approved.", st: "accepted" },
     ];
-    return applyDebateMode(base, caseData, mode);
+    return applyScenarioAdjustments(applyDebateMode(base, caseData, mode), caseData);
   }
 
   if (risk === "moderate") {
@@ -172,7 +207,7 @@ function buildCaseInteractions(caseData, mode = "consensus") {
       { n: 11, from: "lead", to: "pathway", ch: "Finaliseer HOAC + ICF synthese met reassessment op dag 14.", re: "Completed.", st: "accepted" },
       { n: 12, from: "lead", to: "audit", ch: "Publiceer eindadvies voor demo.", re: "Output approved.", st: "accepted" },
     ];
-    return applyDebateMode(base, caseData, mode);
+    return applyScenarioAdjustments(applyDebateMode(base, caseData, mode), caseData);
   }
 
   base = [
@@ -189,7 +224,7 @@ function buildCaseInteractions(caseData, mode = "consensus") {
     { n: 11, from: "lead", to: "pathway", ch: "Finaliseer HOAC + ICF output.", re: "Completed.", st: "accepted" },
     { n: 12, from: "lead", to: "audit", ch: "Vrijgeven demo-uitkomst.", re: "Output approved.", st: "accepted" },
   ];
-  return applyDebateMode(base, caseData, mode);
+  return applyScenarioAdjustments(applyDebateMode(base, caseData, mode), caseData);
 }
 
 function buildConnectionGroups(interactions) {
@@ -447,6 +482,35 @@ function renderInsights(items) {
   `).join("");
 }
 
+function clamp(n, min, max) {
+  return Math.max(min, Math.min(max, n));
+}
+
+function renderTwin(caseData, progressRatio = 0) {
+  if (!caseData) return;
+  const k = caseData.key_inputs || {};
+  const pain = clamp((k.pain_intensity_nrs || 5) + scenarioAdjust.painDelta, 0, 10);
+  const stress = clamp(5 + scenarioAdjust.stressDelta + (progressRatio > 0.5 ? -1 : 0), 0, 10);
+  const funcBase = clamp(10 - pain + (progressRatio * 2), 0, 10);
+  const func = clamp(funcBase + (scenarioAdjust.stressDelta < 0 ? 1 : 0), 0, 10);
+
+  const painPct = `${pain * 10}%`;
+  const stressPct = `${stress * 10}%`;
+  const funcPct = `${func * 10}%`;
+
+  document.getElementById("twinPainFill").style.width = painPct;
+  document.getElementById("twinStressFill").style.width = stressPct;
+  document.getElementById("twinFuncFill").style.width = funcPct;
+  document.getElementById("twinPainVal").textContent = pain.toFixed(1);
+  document.getElementById("twinStressVal").textContent = stress.toFixed(1);
+  document.getElementById("twinFuncVal").textContent = func.toFixed(1);
+
+  const note = scenarioAdjust.forceRedFlag
+    ? "Twin alert: red flag scenario active."
+    : `Twin sync: ${Math.round(progressRatio * 100)}% debate progression.`;
+  document.getElementById("twinNote").textContent = note;
+}
+
 function renderPhaseChips() {
   const el = document.getElementById("phaseChips");
   el.innerHTML = PHASE_ORDER.map((p) => `<button class="phase-chip ${activePhase === p ? "active" : ""}" data-phase="${p}">${p}</button>`).join("");
@@ -542,6 +606,7 @@ async function replayDebate() {
   dot.classList.add("on");
   renderTranscript([]);
   renderInsights([]);
+  renderTwin(activeCase, 0);
   updateTimeline(0, filtered.length);
 
   for (let i = 0; i < filtered.length; i++) {
@@ -554,6 +619,7 @@ async function replayDebate() {
     const partial = filtered.slice(0, i + 1);
     renderTranscript(partial);
     renderInsights(partial);
+    renderTwin(activeCase, (i + 1) / filtered.length);
     updateTimeline(i + 1, filtered.length);
     await pulse(connId, from.color);
     await new Promise((r) => setTimeout(r, 240 / speedMultiplier));
@@ -679,6 +745,7 @@ async function loadCase(key) {
     renderPatientSummary(data);
     renderTranscript(flatInteractions);
     renderInsights(flatInteractions);
+    renderTwin(data, 0);
     renderPhaseChips();
     buildTimeline();
   } catch (err) {
@@ -742,14 +809,90 @@ function initKeywordGuide() {
   });
 }
 
+function applyScenarioAndRefresh() {
+  if (!activeCase) return;
+  rebuildScenario(activeCase);
+  initNetwork();
+  updateInteractionInfo();
+  renderStats(activeCase);
+  renderWorkflow(activeCase);
+  renderValueStory(activeCase);
+  renderPatientSummary(activeCase);
+  const filtered = getFilteredInteractions();
+  renderTranscript(filtered);
+  renderInsights(filtered);
+  renderTwin(activeCase, 0);
+  renderPhaseChips();
+  buildTimeline();
+}
+
+function initSandbox() {
+  const pain = document.getElementById("cfPain");
+  const stress = document.getElementById("cfStress");
+  const red = document.getElementById("cfRedFlag");
+  const painVal = document.getElementById("cfPainVal");
+  const stressVal = document.getElementById("cfStressVal");
+  const applyBtn = document.getElementById("cfApplyBtn");
+  const resetBtn = document.getElementById("cfResetBtn");
+  if (!pain || !stress || !red || !applyBtn || !resetBtn) return;
+
+  const syncLabels = () => {
+    painVal.textContent = pain.value;
+    stressVal.textContent = stress.value;
+  };
+  pain.addEventListener("input", syncLabels);
+  stress.addEventListener("input", syncLabels);
+  syncLabels();
+
+  applyBtn.addEventListener("click", () => {
+    scenarioAdjust = {
+      painDelta: parseInt(pain.value, 10) || 0,
+      stressDelta: parseInt(stress.value, 10) || 0,
+      forceRedFlag: !!red.checked,
+    };
+    applyScenarioAndRefresh();
+  });
+
+  resetBtn.addEventListener("click", () => {
+    pain.value = "0";
+    stress.value = "0";
+    red.checked = false;
+    scenarioAdjust = { painDelta: 0, stressDelta: 0, forceRedFlag: false };
+    syncLabels();
+    applyScenarioAndRefresh();
+  });
+}
+
+async function startStoryMode() {
+  if (storyRunning || !activeCase) return;
+  storyRunning = true;
+  const btn = document.getElementById("storyBtn");
+  const banner = document.getElementById("storyBanner");
+  btn.classList.add("active");
+  banner.textContent = "Boardroom Story: Problem framing";
+  showPanel("value");
+  await new Promise((r) => setTimeout(r, 800));
+  banner.textContent = "Boardroom Story: Clinical workflow";
+  showPanel("workflow");
+  await new Promise((r) => setTimeout(r, 800));
+  banner.textContent = "Boardroom Story: Live multi-agent debate";
+  showPanel("network");
+  await replayDebate();
+  banner.textContent = "Boardroom Story: Outcome + value delivered";
+  btn.classList.remove("active");
+  storyRunning = false;
+}
+
 window.showPanel = showPanel;
 window.setSpeed = setSpeed;
 window.replayDebate = replayDebate;
+window.startStoryMode = startStoryMode;
 
 (function boot() {
   initCaseSelector();
   initDebateModeSelector();
   initViewModeSelector();
   initKeywordGuide();
+  initSandbox();
   loadCase("moderate");
 })();
