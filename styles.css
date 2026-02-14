@@ -259,14 +259,21 @@ body::before {
   font-size: 0.8rem;
 }
 .footer-logo {
-  font-family: 'Syne', sans-serif;
-  letter-spacing: 0.4px;
-  font-weight: 800;
-  color: #d8e2ff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: rgba(77, 143, 255, 0.16);
   border: 1px solid rgba(77, 143, 255, 0.45);
-  padding: 0.08rem 0.5rem;
+  box-shadow: 0 0 18px rgba(77, 143, 255, 0.25);
+  padding: 0.18rem 0.5rem;
   border-radius: 999px;
+}
+.footer-logo img {
+  display: block;
+  height: 20px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 6px rgba(77, 143, 255, 0.35));
 }
 .footer-text {
   color: #8f9ac2;
