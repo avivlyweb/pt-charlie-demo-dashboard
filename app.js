@@ -17,10 +17,13 @@ let activeCase = null;
 let speedMultiplier = 1;
 let running = false;
 let debateMode = "consensus";
+let viewMode = "clinical";
 let activeFilter = null; // { type: 'conn'|'agent', id }
+let activePhase = null;
 let flatInteractions = [];
 let connections = [];
 let pathEls = {};
+const PHASE_ORDER = ["Intake", "Risk Check", "Debate", "Plan", "Follow-up"];
 
 function showPanel(id, ev) {
   document.querySelectorAll(".panel").forEach((p) => p.classList.remove("active"));
@@ -52,6 +55,53 @@ function getDebateModeLabel(mode) {
   return "Clinical consensus";
 }
 
+function getDecisionType(from) {
+  if (from === "ndt") return "Safety Check";
+  if (from === "psycho") return "Psychosocial Lens";
+  if (from === "pathway") return "Pathway Logic";
+  if (from === "interv") return "Exercise Plan";
+  if (from === "audit") return "Quality Gate";
+  return "Synthesis";
+}
+
+function getEvidenceAnchor(type) {
+  if (type === "Safety Check") return "Nijmeegse beslisboom + red-flag screening";
+  if (type === "Psychosocial Lens") return "KNGF psychosocial stratificatie + gedrag";
+  if (type === "Pathway Logic") return "HOAC-II probleemlijst + ICF domeinen";
+  if (type === "Exercise Plan") return "KNGF CLBP graded activity + dosering";
+  if (type === "Quality Gate") return "PROM trendcontrole (ODI/PSFS/NRS)";
+  return "Multidisciplinair consensusprotocol";
+}
+
+function getPhaseByIndex(i) {
+  if (i <= 1) return "Intake";
+  if (i <= 3) return "Risk Check";
+  if (i <= 7) return "Debate";
+  if (i <= 9) return "Plan";
+  return "Follow-up";
+}
+
+function toPatientLanguage(item, caseData) {
+  const person = caseData.patient_profile.name_alias;
+  const decision = item.st === "accepted" ? "goedgekeurd" : item.st === "partial" ? "aangepast" : "nog niet akkoord";
+  return `Voor ${person}: dit onderdeel is ${decision}. Actie: ${item.type.toLowerCase()} met duidelijke vervolgstap.`;
+}
+
+function enrichInteractions(items, caseData) {
+  return items.map((it, idx) => {
+    const phase = getPhaseByIndex(idx);
+    const type = getDecisionType(it.from);
+    return {
+      ...it,
+      n: idx + 1,
+      phase,
+      type,
+      evidence: getEvidenceAnchor(type),
+      patient_text: toPatientLanguage({ ...it, type }, caseData),
+    };
+  });
+}
+
 function applyDebateMode(base, caseData, mode) {
   const risk = getRiskLabel(caseData);
   const adjusted = base.map((it) => ({ ...it }));
@@ -81,7 +131,7 @@ function applyDebateMode(base, caseData, mode) {
     }
   }
 
-  return adjusted.map((it, i) => ({ ...it, n: i + 1 }));
+  return enrichInteractions(adjusted, caseData);
 }
 
 function buildCaseInteractions(caseData, mode = "consensus") {
@@ -153,11 +203,18 @@ function buildConnectionGroups(interactions) {
 }
 
 function getFilteredInteractions() {
-  if (!activeFilter) return flatInteractions;
-  if (activeFilter.type === "conn") {
-    return flatInteractions.filter((it) => `${it.from}-${it.to}` === activeFilter.id);
+  let list = flatInteractions;
+  if (activeFilter) {
+    if (activeFilter.type === "conn") {
+      list = list.filter((it) => `${it.from}-${it.to}` === activeFilter.id);
+    } else {
+      list = list.filter((it) => it.from === activeFilter.id || it.to === activeFilter.id);
+    }
   }
-  return flatInteractions.filter((it) => it.from === activeFilter.id || it.to === activeFilter.id);
+  if (activePhase) {
+    list = list.filter((it) => it.phase === activePhase);
+  }
+  return list;
 }
 
 function setFilter(filter) {
@@ -172,24 +229,42 @@ function clearFilter() {
   activeFilter = null;
   updateInteractionInfo();
   highlightMapFilter();
-  renderTranscript(flatInteractions);
+  renderTranscript(getFilteredInteractions());
+  buildTimeline();
+}
+
+function setPhaseFilter(phase) {
+  activePhase = activePhase === phase ? null : phase;
+  renderPhaseChips();
+  updateInteractionInfo();
+  renderTranscript(getFilteredInteractions());
   buildTimeline();
 }
 
 function updateInteractionInfo() {
   const el = document.getElementById("interactionInfo");
-  if (!activeFilter) {
-    el.innerHTML = "Filter: none";
+  const parts = [];
+  if (activeFilter) {
+    if (activeFilter.type === "conn") {
+      const [from, to] = activeFilter.id.split("-");
+      parts.push(`Connection: ${AGENTS[from].name} → ${AGENTS[to].name}`);
+    } else {
+      parts.push(`Agent: ${AGENTS[activeFilter.id].name}`);
+    }
+  }
+  if (activePhase) parts.push(`Phase: ${activePhase}`);
+  parts.push(`View: ${viewMode === "clinical" ? "Clinical" : "Patient"}`);
+  if (!activeFilter && !activePhase) {
+    el.innerHTML = `Filter: none • ${parts[parts.length - 1]}`;
     return;
   }
-  if (activeFilter.type === "conn") {
-    const [from, to] = activeFilter.id.split("-");
-    el.innerHTML = `Filter: ${AGENTS[from].name} → ${AGENTS[to].name} <button id="clearFilterBtn">clear</button>`;
-  } else {
-    el.innerHTML = `Filter: agent ${AGENTS[activeFilter.id].name} <button id="clearFilterBtn">clear</button>`;
-  }
+  el.innerHTML = `${parts.join(" • ")} <button id="clearFilterBtn">clear</button>`;
   const btn = document.getElementById("clearFilterBtn");
-  if (btn) btn.addEventListener("click", clearFilter);
+  if (btn) btn.addEventListener("click", () => {
+    activePhase = null;
+    clearFilter();
+    renderPhaseChips();
+  });
 }
 
 function highlightMapFilter() {
@@ -245,6 +320,9 @@ function initNetwork() {
       const txt = svgEl("text", { x: bx, y: by + 0.5, class: "conn-count" });
       txt.textContent = String(count);
       connG.appendChild(txt);
+      const label = svgEl("text", { x: bx + 14, y: by - 10, class: "conn-label" });
+      label.textContent = conn.items[0].type;
+      connG.appendChild(label);
     }
   });
 
@@ -310,6 +388,14 @@ function buildTimeline() {
   updateTimeline(0, filtered.length);
 }
 
+function renderPhaseChips() {
+  const el = document.getElementById("phaseChips");
+  el.innerHTML = PHASE_ORDER.map((p) => `<button class="phase-chip ${activePhase === p ? "active" : ""}" data-phase="${p}">${p}</button>`).join("");
+  el.querySelectorAll(".phase-chip").forEach((btn) => {
+    btn.addEventListener("click", () => setPhaseFilter(btn.dataset.phase));
+  });
+}
+
 function statusClass(st) {
   if (st === "accepted") return "accepted";
   if (st === "rejected") return "rejected";
@@ -328,17 +414,30 @@ function renderTranscript(items) {
     const to = AGENTS[item.to];
     const msg = document.createElement("div");
     msg.className = "chat-msg";
+    msg.dataset.n = String(item.n);
+    const challengeText = viewMode === "clinical" ? item.ch : item.patient_text;
+    const responseText = viewMode === "clinical" ? item.re : `Resultaat: ${item.st.toUpperCase()} - ${item.patient_text}`;
     msg.innerHTML = `
       <div class="chat-msg-header">
         <div class="chat-dot" style="background:${from.color}"></div>
         <span class="chat-agent">${from.name}</span>
         <span class="chat-arrow">→</span>
         <span class="chat-target">${to.name}</span>
+        <span class="chat-tag">${item.phase}</span>
+        <span class="chat-tag">${item.type}</span>
         <span class="chat-num">#${item.n}</span>
       </div>
-      <div class="chat-bubble challenge">${item.ch}</div>
-      <div class="chat-bubble response">${item.re}<br><span class="chat-status ${statusClass(item.st)}">${item.st.toUpperCase()}</span></div>
+      <div class="chat-bubble challenge"><span class="chat-title">Claim / Challenge</span>${challengeText}</div>
+      <div class="chat-bubble response"><span class="chat-title">Resolution</span>${responseText}<br><span class="chat-status ${statusClass(item.st)}">${item.st.toUpperCase()}</span></div>
+      <div class="chat-bubble ebp"><span class="chat-title">EBP Anchor</span>${item.evidence}</div>
     `;
+    msg.addEventListener("click", () => {
+      document.querySelectorAll(".chat-msg").forEach((x) => x.classList.remove("active"));
+      msg.classList.add("active");
+      const connId = `${item.from}-${item.to}`;
+      Object.values(pathEls).forEach((p) => p.classList.remove("active"));
+      if (pathEls[connId]) pathEls[connId].classList.add("active");
+    });
     chat.appendChild(msg);
   });
   chat.scrollTop = chat.scrollHeight;
@@ -476,6 +575,21 @@ function renderValueStory(caseData) {
   `;
 }
 
+function renderPatientSummary(caseData) {
+  const risk = getRiskLabel(caseData);
+  const filtered = getFilteredInteractions();
+  const latest = filtered.length ? filtered[filtered.length - 1] : flatInteractions[flatInteractions.length - 1];
+  const safeAction = risk === "high"
+    ? "Vandaag: direct medische beoordeling en alarmsignalen monitoren."
+    : risk === "moderate"
+      ? "Vandaag: rustig opbouwen, ergonomie toepassen, dag 14 herbeoordeling."
+      : "Vandaag: lichte opbouw, actief blijven, korte follow-up.";
+  const text = viewMode === "clinical"
+    ? `Risk: ${risk.toUpperCase()} • Active mode: ${getDebateModeLabel(debateMode)} • Latest phase: ${latest ? latest.phase : "-"}`
+    : `Jouw samenvatting: ${safeAction}`;
+  document.getElementById("caseDetail").textContent = `${caseData.patient_profile.name_alias}, ${caseData.patient_profile.age} jaar • ${text}`;
+}
+
 function rebuildScenario(caseData) {
   flatInteractions = buildCaseInteractions(caseData, debateMode);
   connections = buildConnectionGroups(flatInteractions);
@@ -500,7 +614,9 @@ async function loadCase(key) {
     renderStats(data);
     renderWorkflow(data);
     renderValueStory(data);
+    renderPatientSummary(data);
     renderTranscript(flatInteractions);
+    renderPhaseChips();
     buildTimeline();
   } catch (err) {
     console.error(err);
@@ -527,8 +643,22 @@ function initDebateModeSelector() {
       renderStats(activeCase);
       renderWorkflow(activeCase);
       renderValueStory(activeCase);
-      renderTranscript(flatInteractions);
+      renderPatientSummary(activeCase);
+      renderTranscript(getFilteredInteractions());
+      renderPhaseChips();
       buildTimeline();
+    }
+  });
+}
+
+function initViewModeSelector() {
+  const sel = document.getElementById("viewModeSelect");
+  sel.addEventListener("change", () => {
+    viewMode = sel.value;
+    updateInteractionInfo();
+    if (activeCase) {
+      renderPatientSummary(activeCase);
+      renderTranscript(getFilteredInteractions());
     }
   });
 }
@@ -540,5 +670,6 @@ window.replayDebate = replayDebate;
 (function boot() {
   initCaseSelector();
   initDebateModeSelector();
+  initViewModeSelector();
   loadCase("moderate");
 })();

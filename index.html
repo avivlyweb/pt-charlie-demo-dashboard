@@ -39,6 +39,10 @@
             <option value="moderate" selected>Moderate</option>
             <option value="high">High</option>
           </select>
+          <select id="viewModeSelect" class="case-select">
+            <option value="clinical" selected>Clinical View</option>
+            <option value="patient">Patient View</option>
+          </select>
           <select id="debateModeSelect" class="case-select">
             <option value="consensus" selected>Clinical consensus</option>
             <option value="devil">Devil's advocate</option>
@@ -78,6 +82,7 @@
       </div>
 
       <div class="timeline-wrap">
+        <div id="phaseChips" class="phase-chips"></div>
         <div class="timeline-track">
           <div class="timeline-line"></div>
           <div class="timeline-progress" id="tlProgress"></div>
