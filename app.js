@@ -221,7 +221,9 @@ function setFilter(filter) {
   activeFilter = filter;
   updateInteractionInfo();
   highlightMapFilter();
-  renderTranscript(getFilteredInteractions());
+  const filtered = getFilteredInteractions();
+  renderTranscript(filtered);
+  renderInsights(filtered);
   buildTimeline();
 }
 
@@ -229,7 +231,9 @@ function clearFilter() {
   activeFilter = null;
   updateInteractionInfo();
   highlightMapFilter();
-  renderTranscript(getFilteredInteractions());
+  const filtered = getFilteredInteractions();
+  renderTranscript(filtered);
+  renderInsights(filtered);
   buildTimeline();
 }
 
@@ -237,7 +241,9 @@ function setPhaseFilter(phase) {
   activePhase = activePhase === phase ? null : phase;
   renderPhaseChips();
   updateInteractionInfo();
-  renderTranscript(getFilteredInteractions());
+  const filtered = getFilteredInteractions();
+  renderTranscript(filtered);
+  renderInsights(filtered);
   buildTimeline();
 }
 
@@ -377,7 +383,9 @@ function buildTimeline() {
     d.textContent = it.n;
     d.title = `${AGENTS[it.from].name} -> ${AGENTS[it.to].name}`;
     d.addEventListener("click", () => {
-      renderTranscript(filtered.slice(0, idx + 1));
+      const partial = filtered.slice(0, idx + 1);
+      renderTranscript(partial);
+      renderInsights(partial);
       updateTimeline(idx + 1, filtered.length);
       const connId = `${it.from}-${it.to}`;
       Object.values(pathEls).forEach((p) => p.classList.remove("active"));
@@ -386,6 +394,57 @@ function buildTimeline() {
     wrap.appendChild(d);
   });
   updateTimeline(0, filtered.length);
+}
+
+function computeConsensus(items) {
+  if (!items.length) return 0;
+  let score = 0;
+  items.forEach((it) => {
+    if (it.st === "accepted") score += 1;
+    else if (it.st === "partial") score += 0.5;
+  });
+  return Math.round((score / items.length) * 100);
+}
+
+function countConflictPairs(items) {
+  const map = new Map();
+  items.forEach((it) => {
+    if (it.st === "accepted") return;
+    const pair = `${AGENTS[it.from].short}→${AGENTS[it.to].short}`;
+    map.set(pair, (map.get(pair) || 0) + (it.st === "rejected" ? 2 : 1));
+  });
+  return [...map.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6);
+}
+
+function heatColor(v, max) {
+  if (max <= 0) return "rgba(77,143,255,0.25)";
+  const n = v / max;
+  if (n > 0.75) return "rgba(255,71,87,0.3)";
+  if (n > 0.45) return "rgba(255,210,63,0.28)";
+  return "rgba(77,143,255,0.24)";
+}
+
+function renderInsights(items) {
+  const consensus = computeConsensus(items);
+  const fill = document.getElementById("consensusFill");
+  const val = document.getElementById("consensusValue");
+  if (fill) fill.style.width = `${consensus}%`;
+  if (val) val.textContent = `${consensus}%`;
+
+  const grid = document.getElementById("heatmapGrid");
+  if (!grid) return;
+  const pairs = countConflictPairs(items);
+  if (!pairs.length) {
+    grid.innerHTML = '<div class="heat-cell"><span class="heat-pair">No conflict</span><span class="heat-count">0</span></div>';
+    return;
+  }
+  const max = pairs[0][1];
+  grid.innerHTML = pairs.map(([pair, cnt]) => `
+    <div class="heat-cell" style="background:${heatColor(cnt, max)}">
+      <span class="heat-pair">${pair}</span>
+      <span class="heat-count">${cnt}</span>
+    </div>
+  `).join("");
 }
 
 function renderPhaseChips() {
@@ -482,6 +541,7 @@ async function replayDebate() {
   btn.textContent = "■ Running";
   dot.classList.add("on");
   renderTranscript([]);
+  renderInsights([]);
   updateTimeline(0, filtered.length);
 
   for (let i = 0; i < filtered.length; i++) {
@@ -491,7 +551,9 @@ async function replayDebate() {
     Object.values(pathEls).forEach((p) => p.classList.remove("active"));
     const connId = `${item.from}-${item.to}`;
     if (pathEls[connId]) pathEls[connId].classList.add("active");
-    renderTranscript(filtered.slice(0, i + 1));
+    const partial = filtered.slice(0, i + 1);
+    renderTranscript(partial);
+    renderInsights(partial);
     updateTimeline(i + 1, filtered.length);
     await pulse(connId, from.color);
     await new Promise((r) => setTimeout(r, 240 / speedMultiplier));
@@ -616,6 +678,7 @@ async function loadCase(key) {
     renderValueStory(data);
     renderPatientSummary(data);
     renderTranscript(flatInteractions);
+    renderInsights(flatInteractions);
     renderPhaseChips();
     buildTimeline();
   } catch (err) {
@@ -644,7 +707,9 @@ function initDebateModeSelector() {
       renderWorkflow(activeCase);
       renderValueStory(activeCase);
       renderPatientSummary(activeCase);
-      renderTranscript(getFilteredInteractions());
+      const filtered = getFilteredInteractions();
+      renderTranscript(filtered);
+      renderInsights(filtered);
       renderPhaseChips();
       buildTimeline();
     }
@@ -658,7 +723,9 @@ function initViewModeSelector() {
     updateInteractionInfo();
     if (activeCase) {
       renderPatientSummary(activeCase);
-      renderTranscript(getFilteredInteractions());
+      const filtered = getFilteredInteractions();
+      renderTranscript(filtered);
+      renderInsights(filtered);
     }
   });
 }

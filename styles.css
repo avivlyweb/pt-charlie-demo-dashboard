@@ -140,6 +140,76 @@ body::before {
 .replay-btn { padding: 0.38rem 0.9rem; font-family: 'Syne', sans-serif; font-weight: 700; cursor: pointer; }
 .replay-btn.playing { background: var(--reject); border-color: var(--reject); }
 
+.insights-strip {
+  display: grid;
+  grid-template-columns: minmax(260px, 360px) 1fr;
+  gap: 0.8rem;
+  margin-bottom: 0.9rem;
+}
+.insight-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.65rem 0.8rem;
+}
+.insight-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #dce6ff;
+  margin-bottom: 0.38rem;
+}
+.meter-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+.meter-track {
+  height: 10px;
+  border-radius: 999px;
+  background: #161d38;
+  border: 1px solid var(--border);
+  flex: 1;
+  overflow: hidden;
+}
+.meter-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #ff5a6f 0%, #ffd23f 45%, #00e88f 100%);
+  transition: width 0.35s ease;
+}
+.meter-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  color: #d8e3ff;
+  min-width: 42px;
+  text-align: right;
+}
+.heatmap-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(38px, 1fr));
+  gap: 0.3rem;
+}
+.heat-cell {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.22rem 0.3rem;
+  background: #111833;
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+}
+.heat-pair {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.53rem;
+  color: #98a5d1;
+}
+.heat-count {
+  font-family: 'Syne', sans-serif;
+  font-size: 0.77rem;
+  font-weight: 700;
+}
+
 .network-split { display: grid; grid-template-columns: 1fr 360px; gap: 1rem; margin-bottom: 1rem; }
 .network-svg-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
 .network-svg-wrap svg { width: 100%; height: auto; display: block; }
@@ -343,6 +413,7 @@ body::before {
 }
 
 @media (max-width: 900px) {
+  .insights-strip { grid-template-columns: 1fr; }
   .network-split { grid-template-columns: 1fr; }
   .nav { overflow-x: auto; padding: 0 1rem; }
   .content { padding: 1rem; }

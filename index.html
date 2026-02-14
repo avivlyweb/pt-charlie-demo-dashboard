@@ -51,7 +51,24 @@
           <button class="speed-btn active" data-speed="1" onclick="setSpeed(1)">1x</button>
           <button class="speed-btn" data-speed="2" onclick="setSpeed(2)">2x</button>
           <button class="speed-btn" data-speed="0.5" onclick="setSpeed(0.5)">0.5x</button>
+          <button class="speed-btn" data-speed="0.2" onclick="setSpeed(0.2)">0.2x</button>
           <button class="replay-btn" id="replayBtn" onclick="replayDebate()">▶ Replay Debate</button>
+        </div>
+      </div>
+
+      <div class="insights-strip">
+        <div class="insight-card">
+          <div class="insight-title">Consensus Meter</div>
+          <div class="meter-wrap">
+            <div class="meter-track">
+              <div id="consensusFill" class="meter-fill"></div>
+            </div>
+            <div id="consensusValue" class="meter-value">0%</div>
+          </div>
+        </div>
+        <div class="insight-card">
+          <div class="insight-title">Conflict Heatmap</div>
+          <div id="heatmapGrid" class="heatmap-grid"></div>
         </div>
       </div>
 
