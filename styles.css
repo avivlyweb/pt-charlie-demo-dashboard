@@ -156,6 +156,73 @@ body::before {
   border-radius: 12px;
   padding: 0.65rem 0.8rem;
 }
+.guide-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.8rem 0.9rem;
+  margin-bottom: 0.95rem;
+}
+.guide-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.55rem;
+}
+.guide-head h3 {
+  font-family: 'Syne', sans-serif;
+  font-size: 0.9rem;
+}
+.guide-head span {
+  font-size: 0.7rem;
+  color: #9eadde;
+}
+.guide-agent-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.38rem;
+  margin-bottom: 0.6rem;
+}
+.guide-chip {
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: #ced9ff;
+  border-radius: 999px;
+  padding: 0.16rem 0.52rem;
+  font-size: 0.64rem;
+  font-family: 'JetBrains Mono', monospace;
+  cursor: pointer;
+}
+.guide-chip:hover {
+  border-color: var(--hoac);
+}
+.guide-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 0.65rem;
+}
+.guide-grid details {
+  background: #101630;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.48rem 0.58rem;
+}
+.guide-grid summary {
+  font-family: 'Syne', sans-serif;
+  font-size: 0.76rem;
+  cursor: pointer;
+}
+.guide-grid ul {
+  margin-left: 1rem;
+  margin-top: 0.4rem;
+  display: grid;
+  gap: 0.22rem;
+}
+.guide-grid li {
+  color: #94a2cf;
+  font-size: 0.72rem;
+}
 .insight-title {
   font-family: 'Syne', sans-serif;
   font-size: 0.76rem;

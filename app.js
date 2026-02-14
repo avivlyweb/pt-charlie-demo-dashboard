@@ -730,6 +730,18 @@ function initViewModeSelector() {
   });
 }
 
+function initKeywordGuide() {
+  document.querySelectorAll("[data-guide-agent]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const id = btn.getAttribute("data-guide-agent");
+      if (!id || !AGENTS[id]) return;
+      setFilter({ type: "agent", id });
+      const panel = document.getElementById("network");
+      if (panel) panel.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+}
+
 window.showPanel = showPanel;
 window.setSpeed = setSpeed;
 window.replayDebate = replayDebate;
@@ -738,5 +750,6 @@ window.replayDebate = replayDebate;
   initCaseSelector();
   initDebateModeSelector();
   initViewModeSelector();
+  initKeywordGuide();
   loadCase("moderate");
 })();
