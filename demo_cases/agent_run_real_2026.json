@@ -1,0 +1,196 @@
+{
+  "generated_at": "2026-02-15T10:16:34.396Z",
+  "source": "local_pt_charlie_agent_simulation",
+  "case_id": "PTC-DEMO-MOD-REAL-2026-001",
+  "patient": {
+    "name_alias": "Nora",
+    "age": 48,
+    "gender": "vrouw",
+    "occupation": "zorgassistent verpleeghuis",
+    "work_status": "gedeeltelijk verzuim (2/5 dagen)"
+  },
+  "key_inputs": {
+    "pain_duration": ">12 weken",
+    "pain_intensity_nrs": 7,
+    "odi_pct": 46,
+    "tsk11": 33,
+    "pcs": 27,
+    "hads_a": 10,
+    "hads_d": 9,
+    "fabq_w_band": "hoog",
+    "sleep_disturbance": true,
+    "physical_workload": "hoog",
+    "red_flags": false,
+    "rtw_risk_cluster": "matig-hoog"
+  },
+  "debate_rounds": [
+    {
+      "n": 1,
+      "from": "ndt",
+      "to": "lead",
+      "phase": "Intake",
+      "type": "Safety Check",
+      "challenge": "Nora (48, zorgassistent) heeft langdurige CLBP zonder acute red flags, maar met hoge functionele impact.",
+      "resolution": "Lead vraagt om risicoprofiel voor chronicity en RTW in plaats van direct verwijzen.",
+      "status": "accepted",
+      "ebp_anchor": "Nijmeegse beslisboom + red-flag screening"
+    },
+    {
+      "n": 2,
+      "from": "psycho",
+      "to": "lead",
+      "phase": "Intake",
+      "type": "Psychosocial Lens",
+      "challenge": "Hoge bewegingsangst, slaapverstoring en somberheid vergroten kans op persisterende beperkingen.",
+      "resolution": "Accepted. Psychosociale targets verplicht in weekplan.",
+      "status": "accepted",
+      "ebp_anchor": "KNGF psychosocial stratificatie + gedrag"
+    },
+    {
+      "n": 3,
+      "from": "pathway",
+      "to": "lead",
+      "phase": "Risk Check",
+      "type": "Pathway Logic",
+      "challenge": "State: RED_FLAG_SCREEN -> BASELINE_PROMS_NDT -> RISK_STRATIFY -> WORKLOAD_ADAPTIVE_PLAN.",
+      "resolution": "Accepted.",
+      "status": "accepted",
+      "ebp_anchor": "HOAC-II probleemlijst + ICF domeinen"
+    },
+    {
+      "n": 4,
+      "from": "interv",
+      "to": "lead",
+      "phase": "Risk Check",
+      "type": "Exercise Plan",
+      "challenge": "Voorstel: graded activity + tiltechniek + pacing + korte thuisoefeningen 5x/week.",
+      "resolution": "Partial: startbelasting verlagen en flare-protocol expliciet maken.",
+      "status": "partial",
+      "ebp_anchor": "KNGF CLBP graded activity + dosering"
+    },
+    {
+      "n": 5,
+      "from": "audit",
+      "to": "lead",
+      "phase": "Risk Check",
+      "type": "Quality Gate",
+      "challenge": "Check op evidence gate: MCID drempels en externe validatie voor prognoseclaims.",
+      "resolution": "Accepted.",
+      "status": "accepted",
+      "ebp_anchor": "PROM trendcontrole (ODI/PSFS/NRS)"
+    },
+    {
+      "n": 6,
+      "from": "lead",
+      "to": "psycho",
+      "phase": "Debate",
+      "type": "Synthesis",
+      "challenge": "Debat ronde 2: is stress dominant of fysieke werkbelasting dominant?",
+      "resolution": "Psycho: beide routes actief; trend evalueren op ODI/NRS + werkfunctie.",
+      "status": "partial",
+      "ebp_anchor": "Multidisciplinair consensusprotocol"
+    },
+    {
+      "n": 7,
+      "from": "ndt",
+      "to": "pathway",
+      "phase": "Debate",
+      "type": "Safety Check",
+      "challenge": "Geen rode vlaggen bevestigd, maar RTW-risico matig-hoog door fysieke werkbelasting.",
+      "resolution": "Accepted.",
+      "status": "accepted",
+      "ebp_anchor": "Nijmeegse beslisboom + red-flag screening"
+    },
+    {
+      "n": 8,
+      "from": "interv",
+      "to": "audit",
+      "phase": "Debate",
+      "type": "Exercise Plan",
+      "challenge": "Plan aangepast: lagere startdosis, progressie per 3 dagen, stopregels bij pijnpiek >2 punten.",
+      "resolution": "Accepted.",
+      "status": "accepted",
+      "ebp_anchor": "KNGF CLBP graded activity + dosering"
+    },
+    {
+      "n": 9,
+      "from": "pathway",
+      "to": "interv",
+      "phase": "Plan",
+      "type": "Pathway Logic",
+      "challenge": "Werkmodule toegevoegd: tilbelasting spreiden en taakrotatie bespreken met werkgever.",
+      "resolution": "Accepted.",
+      "status": "accepted",
+      "ebp_anchor": "HOAC-II probleemlijst + ICF domeinen"
+    },
+    {
+      "n": 10,
+      "from": "audit",
+      "to": "lead",
+      "phase": "Plan",
+      "type": "Quality Gate",
+      "challenge": "Value-check: voorkomen van ongerichte verwijzing door eerst 14-daagse responsmeting.",
+      "resolution": "Accepted.",
+      "status": "accepted",
+      "ebp_anchor": "PROM trendcontrole (ODI/PSFS/NRS)"
+    },
+    {
+      "n": 11,
+      "from": "lead",
+      "to": "pathway",
+      "phase": "Follow-up",
+      "type": "Synthesis",
+      "challenge": "Finaliseer plan met dag 14 reassessment en beslisboom: continue / intensiveren / verwijzen.",
+      "resolution": "Completed.",
+      "status": "accepted",
+      "ebp_anchor": "Multidisciplinair consensusprotocol"
+    },
+    {
+      "n": 12,
+      "from": "lead",
+      "to": "audit",
+      "phase": "Follow-up",
+      "type": "Synthesis",
+      "challenge": "Publiceer patiënt- en clinician-versie met expliciete meetdoelen.",
+      "resolution": "Output approved.",
+      "status": "accepted",
+      "ebp_anchor": "Multidisciplinair consensusprotocol"
+    }
+  ],
+  "clinical_plan": {
+    "horizon_days": 14,
+    "goals": [
+      "NRS reductie >=1.5 punt en ODI reductie >=10 punten als klinische responsdoel",
+      "Werkfunctie verbeteren met gecontroleerde belastingopbouw",
+      "Bewegingsangst en slaapverstoring actief adresseren"
+    ],
+    "week1": [
+      "Lage startdosis graded activity",
+      "Dagelijkse korte thuissessie + pacing",
+      "Ergonomie en tiltechniek op werk",
+      "Psychosociale interventie op fear-avoidance"
+    ],
+    "week2": [
+      "Progressie elke 3 dagen op basis van respons",
+      "Flare-protocol bij pijnstijging >2 NRS",
+      "Dag 14 reassessment: continue/intensify/refer"
+    ],
+    "stop_rules": [
+      "Nieuwe neurologische uitval",
+      "Nachtpijn progressief + systemische alarmsignalen",
+      "Functiedaling ondanks dose reduction"
+    ]
+  },
+  "data_evidence": {
+    "benchmarks": {
+      "nrs_mcid": 1.5,
+      "odi_mcid": 10,
+      "validation_gate": "External validation required for prognostic model-driven decisions."
+    },
+    "risk_flags": [
+      "High psychosocial load (TSK/PCS/HADS)",
+      "High physical workload",
+      "No current red flags"
+    ]
+  }
+}

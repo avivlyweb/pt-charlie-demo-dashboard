@@ -1,8 +1,8 @@
 {
   "case_id": "PTC-DEMO-MOD-REAL-2026-001",
-  "title": "Real Patient 2026 - Fatima (48) met CLBP en dreigende uitval",
+  "title": "Real Patient 2026 - Nora (48) met CLBP en dreigende uitval",
   "patient_profile": {
-    "name_alias": "Fatima",
+    "name_alias": "Nora",
     "age": 48,
     "gender": "vrouw",
     "occupation": "zorgassistent verpleeghuis",
