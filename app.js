@@ -2,6 +2,7 @@ const CASE_FILES = {
   low: "./demo_cases/case_low_risk_nl.json",
   moderate: "./demo_cases/case_moderate_risk_nl.json",
   high: "./demo_cases/case_high_risk_nl.json",
+  real: "./demo_cases/case_real_patient_2026_nl.json",
 };
 
 const AGENTS = {
@@ -39,6 +40,7 @@ let flatInteractions = [];
 let connections = [];
 let pathEls = {};
 const PHASE_ORDER = ["Intake", "Risk Check", "Debate", "Plan", "Follow-up"];
+let chatTab = "debate";
 
 function showPanel(id, ev, opts = {}) {
   const target = document.getElementById(id) ? id : "network";
@@ -58,6 +60,20 @@ function showPanel(id, ev, opts = {}) {
 function setSpeed(s) {
   speedMultiplier = s;
   document.querySelectorAll(".speed-btn").forEach((b) => b.classList.toggle("active", parseFloat(b.dataset.speed) === s));
+}
+
+function showChatTab(tab, ev) {
+  chatTab = tab;
+  document.querySelectorAll(".chat-tab-btn").forEach((b) => b.classList.remove("active"));
+  document.querySelectorAll(".chat-tab-content").forEach((p) => p.classList.remove("active"));
+  const panelId = tab === "plan" ? "chatTabPlan" : tab === "evidence" ? "chatTabEvidence" : "chatTabDebate";
+  const panel = document.getElementById(panelId);
+  if (panel) panel.classList.add("active");
+  if (ev && ev.currentTarget) ev.currentTarget.classList.add("active");
+  else {
+    const btn = document.querySelector(`.chat-tab-btn[onclick*=\"showChatTab('${tab}'\"]`);
+    if (btn) btn.classList.add("active");
+  }
 }
 
 function svgEl(tag, attrs = {}) {
@@ -205,6 +221,24 @@ function buildCaseInteractions(caseData, mode = "consensus") {
   const risk = getRiskLabel(caseData);
   let base = [];
 
+  if (caseData.case_id.includes("REAL")) {
+    base = [
+      { n: 1, from: "ndt", to: "lead", ch: `${p.name_alias} (${p.age}, ${p.occupation}) heeft langdurige CLBP zonder acute red flags, maar met hoge functionele impact.`, re: "Lead vraagt om risicoprofiel voor chronicity en RTW in plaats van direct verwijzen.", st: "accepted" },
+      { n: 2, from: "psycho", to: "lead", ch: "Hoge bewegingsangst, slaapverstoring en somberheid vergroten kans op persisterende beperkingen.", re: "Accepted. Psychosociale targets verplicht in weekplan.", st: "accepted" },
+      { n: 3, from: "pathway", to: "lead", ch: "State: RED_FLAG_SCREEN -> BASELINE_PROMS_NDT -> RISK_STRATIFY -> WORKLOAD_ADAPTIVE_PLAN.", re: "Accepted.", st: "accepted" },
+      { n: 4, from: "interv", to: "lead", ch: "Voorstel: graded activity + tiltechniek + pacing + korte thuisoefeningen 5x/week.", re: "Partial: startbelasting verlagen en flare-protocol expliciet maken.", st: "partial" },
+      { n: 5, from: "audit", to: "lead", ch: "Check op evidence gate: MCID drempels en externe validatie voor prognoseclaims.", re: "Accepted.", st: "accepted" },
+      { n: 6, from: "lead", to: "psycho", ch: "Debat ronde 2: is stress dominant of fysieke werkbelasting dominant?", re: "Psycho: beide routes actief; trend evalueren op ODI/NRS + werkfunctie.", st: "partial" },
+      { n: 7, from: "ndt", to: "pathway", ch: "Geen rode vlaggen bevestigd, maar RTW-risico matig-hoog door fysieke werkbelasting.", re: "Accepted.", st: "accepted" },
+      { n: 8, from: "interv", to: "audit", ch: "Plan aangepast: lagere startdosis, progressie per 3 dagen, stopregels bij pijnpiek >2 punten.", re: "Accepted.", st: "accepted" },
+      { n: 9, from: "pathway", to: "interv", ch: "Werkmodule toegevoegd: tilbelasting spreiden en taakrotatie bespreken met werkgever.", re: "Accepted.", st: "accepted" },
+      { n: 10, from: "audit", to: "lead", ch: "Value-check: voorkomen van ongerichte verwijzing door eerst 14-daagse responsmeting.", re: "Accepted.", st: "accepted" },
+      { n: 11, from: "lead", to: "pathway", ch: "Finaliseer plan met dag 14 reassessment en beslisboom: continue / intensiveren / verwijzen.", re: "Completed.", st: "accepted" },
+      { n: 12, from: "lead", to: "audit", ch: "Publiceer patiënt- en clinician-versie met expliciete meetdoelen.", re: "Output approved.", st: "accepted" },
+    ];
+    return applyScenarioAdjustments(applyDebateMode(base, caseData, mode), caseData);
+  }
+
   if (risk === "high") {
     base = [
       { n: 1, from: "ndt", to: "lead", ch: `${p.name_alias} (${p.age}) heeft neurologische uitval, mictieproblemen en nachtpijn.`, re: "Lead activeert directe veiligheidsroute, geen standaard oefentraject.", st: "accepted" },
@@ -290,6 +324,7 @@ function setFilter(filter) {
   const filtered = getFilteredInteractions();
   renderTranscript(filtered);
   renderInsights(filtered);
+  renderDataEvidence(activeCase, filtered);
   buildTimeline();
 }
 
@@ -300,6 +335,7 @@ function clearFilter() {
   const filtered = getFilteredInteractions();
   renderTranscript(filtered);
   renderInsights(filtered);
+  renderDataEvidence(activeCase, filtered);
   buildTimeline();
 }
 
@@ -310,6 +346,7 @@ function setPhaseFilter(phase) {
   const filtered = getFilteredInteractions();
   renderTranscript(filtered);
   renderInsights(filtered);
+  renderDataEvidence(activeCase, filtered);
   buildTimeline();
 }
 
@@ -598,6 +635,109 @@ function renderTranscript(items) {
   chat.scrollTop = chat.scrollHeight;
 }
 
+function renderClinicalPlan(caseData) {
+  const el = document.getElementById("planBody");
+  if (!el || !caseData) return;
+  const k = caseData.key_inputs || {};
+  const risk = getRiskLabel(caseData);
+  const mainGoal = risk === "high"
+    ? "Veilige escalatie en medische beoordeling prioriteren."
+    : "Functionele opbouw met gelijktijdige psychosociale en werkgerichte interventies.";
+  const monitor = [
+    `NRS baseline: ${k.pain_intensity_nrs ?? "-"} -> target daling >= ${EVIDENCE_2026.mcid.nrs_points} punt`,
+    `ODI baseline: ${k.odi_pct ?? "-"} -> target daling >= ${EVIDENCE_2026.mcid.odi_points} punten`,
+    "Reassessment op dag 14 met beslisregel: doorgaan / aanpassen / verwijzen",
+  ];
+
+  el.innerHTML = `
+    <div class="plan-grid">
+      <div class="plan-card">
+        <h4>Patient Summary</h4>
+        <p><strong>${caseData.patient_profile.name_alias}</strong>, ${caseData.patient_profile.age} jaar, ${caseData.patient_profile.occupation}</p>
+        <p>${caseData.narrative_nl}</p>
+      </div>
+      <div class="plan-card">
+        <h4>Clinical Objectives (14 dagen)</h4>
+        <ul>
+          <li>${mainGoal}</li>
+          <li>Verbeter functie in ADL/werk zonder safety-signalen te missen.</li>
+          <li>Verhoog zelfeffectiviteit met duidelijke belastingopbouw.</li>
+        </ul>
+      </div>
+      <div class="plan-card">
+        <h4>Week 1 Plan</h4>
+        <ul>
+          <li>Graded activity op lage startdosis met pacing.</li>
+          <li>Ergonomie/tiltechniek en micro-pauzes tijdens werk.</li>
+          <li>Psychosociale module: bewegingsangst + slaaproutine.</li>
+        </ul>
+      </div>
+      <div class="plan-card">
+        <h4>Week 2 Plan</h4>
+        <ul>
+          <li>Progressie van oefendosering op basis van symptoomrespons.</li>
+          <li>Flare-protocol actief bij pijnstijging of functiedaling.</li>
+          <li>Beslismoment dag 14: continueren, intensiveren of verwijzen.</li>
+        </ul>
+      </div>
+      <div class="plan-card">
+        <h4>Monitoring & Stop Rules</h4>
+        <ul>${monitor.map((m) => `<li>${m}</li>`).join("")}</ul>
+      </div>
+    </div>
+  `;
+}
+
+function renderDataEvidence(caseData, items) {
+  const el = document.getElementById("evidenceBody");
+  if (!el || !caseData) return;
+  const k = caseData.key_inputs || {};
+  const accepted = items.filter((x) => x.st === "accepted").length;
+  const partial = items.filter((x) => x.st === "partial").length;
+  const conflicts = items.filter((x) => x.st !== "accepted").length;
+
+  const rows = [
+    ["NRS pijn", `${k.pain_intensity_nrs ?? "-"}`, `MCID >= ${EVIDENCE_2026.mcid.nrs_points}`, (k.pain_intensity_nrs ?? 0) >= 6 ? "High baseline burden" : "Moderate baseline burden"],
+    ["ODI", `${k.odi_pct ?? "-"}%`, `MCID >= ${EVIDENCE_2026.mcid.odi_points} punten`, (k.odi_pct ?? 0) >= 40 ? "Functional limitation elevated" : "Functional limitation moderate"],
+    ["Psychosocial load", `TSK ${k.tsk11 ?? "-"} / PCS ${k.pcs ?? "-"}`, "Depression/anxiety OR 1.4-2.1", "Psychological barriers likely active"],
+    ["Work demand", `${k.physical_workload || k.fabq_w_band || "-"}`, "Psychosocial workload OR 1.32", "RTW risk contribution present"],
+    ["Red flags", `${k.red_flags ? "YES" : "NO"}`, "Nijmegen red-flag gate", k.red_flags ? "Immediate escalation path" : "Conservative pathway allowed"],
+    ["Model validity", "Any model output", EVIDENCE_2026.validation_rule, "Gate enforced"],
+  ];
+
+  el.innerHTML = `
+    <div class="plan-grid">
+      <div class="plan-card">
+        <h4>Debate Quality Snapshot</h4>
+        <p>
+          <span class="pill-ok">Accepted: ${accepted}</span>
+          <span class="pill-warn">Partial/Rejected: ${conflicts} (${partial} partial)</span>
+        </p>
+      </div>
+      <div class="plan-card">
+        <h4>Patient Data vs 2026 Benchmarks</h4>
+        <table class="evidence-table">
+          <thead>
+            <tr><th>Signal</th><th>Case Value</th><th>Benchmark</th><th>Interpretation</th></tr>
+          </thead>
+          <tbody>
+            ${rows.map((r) => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`).join("")}
+          </tbody>
+        </table>
+      </div>
+      <div class="plan-card">
+        <h4>Evidence Anchors Used</h4>
+        <ul>
+          <li>RTW signal: age/work-status and workload risk estimates.</li>
+          <li>PROM targets: NRS/ODI MCID thresholds for short-cycle reassessment.</li>
+          <li>Safety gate: no high-impact prognostic decision without external validation.</li>
+          <li>Pathway fidelity: decision must map to concrete next action.</li>
+        </ul>
+      </div>
+    </div>
+  `;
+}
+
 async function pulse(connId, color) {
   const path = pathEls[connId];
   if (!path) return;
@@ -629,6 +769,7 @@ async function replayDebate() {
   if (running) return;
   const filtered = getFilteredInteractions();
   if (!filtered.length) return;
+  showChatTab("debate");
 
   running = true;
   const btn = document.getElementById("replayBtn");
@@ -638,6 +779,7 @@ async function replayDebate() {
   dot.classList.add("on");
   renderTranscript([]);
   renderInsights([]);
+  renderDataEvidence(activeCase, []);
   renderTwin(activeCase, 0);
   updateTimeline(0, filtered.length);
 
@@ -651,6 +793,7 @@ async function replayDebate() {
     const partial = filtered.slice(0, i + 1);
     renderTranscript(partial);
     renderInsights(partial);
+    renderDataEvidence(activeCase, partial);
     renderTwin(activeCase, (i + 1) / filtered.length);
     updateTimeline(i + 1, filtered.length);
     await pulse(connId, from.color);
@@ -782,6 +925,8 @@ async function loadCase(key) {
     renderValueStory(data);
     renderPatientSummary(data);
     renderTranscript(flatInteractions);
+    renderClinicalPlan(data);
+    renderDataEvidence(data, flatInteractions);
     renderInsights(flatInteractions);
     renderTwin(data, 0);
     renderPhaseChips();
@@ -814,6 +959,8 @@ function initDebateModeSelector() {
       renderPatientSummary(activeCase);
       const filtered = getFilteredInteractions();
       renderTranscript(filtered);
+      renderClinicalPlan(activeCase);
+      renderDataEvidence(activeCase, filtered);
       renderInsights(filtered);
       renderPhaseChips();
       buildTimeline();
@@ -830,6 +977,8 @@ function initViewModeSelector() {
       renderPatientSummary(activeCase);
       const filtered = getFilteredInteractions();
       renderTranscript(filtered);
+      renderClinicalPlan(activeCase);
+      renderDataEvidence(activeCase, filtered);
       renderInsights(filtered);
     }
   });
@@ -868,6 +1017,8 @@ function applyScenarioAndRefresh() {
   renderPatientSummary(activeCase);
   const filtered = getFilteredInteractions();
   renderTranscript(filtered);
+  renderClinicalPlan(activeCase);
+  renderDataEvidence(activeCase, filtered);
   renderInsights(filtered);
   renderTwin(activeCase, 0);
   renderPhaseChips();
@@ -925,6 +1076,7 @@ async function startStoryMode() {
   await new Promise((r) => setTimeout(r, 800));
   banner.textContent = "Boardroom Story: Live multi-agent debate";
   showPanel("network");
+  showChatTab("debate");
   await replayDebate();
   banner.textContent = "Boardroom Story: Outcome + value delivered";
   btn.classList.remove("active");
@@ -932,6 +1084,7 @@ async function startStoryMode() {
 }
 
 window.showPanel = showPanel;
+window.showChatTab = showChatTab;
 window.setSpeed = setSpeed;
 window.replayDebate = replayDebate;
 window.startStoryMode = startStoryMode;
@@ -943,5 +1096,5 @@ window.startStoryMode = startStoryMode;
   initKeywordGuide();
   initDeepLinking();
   initSandbox();
-  loadCase("moderate");
+  loadCase("real");
 })();

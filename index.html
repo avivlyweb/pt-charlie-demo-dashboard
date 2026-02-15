@@ -41,6 +41,7 @@
             <option value="low">Low</option>
             <option value="moderate" selected>Moderate</option>
             <option value="high">High</option>
+            <option value="real">Real Patient 2026</option>
           </select>
           <select id="viewModeSelect" class="case-select">
             <option value="clinical" selected>Clinical View</option>
@@ -187,9 +188,22 @@
         </div>
 
         <div class="chat-panel">
-          <div class="chat-header"><div class="live-dot" id="liveDot"></div> Debate Transcript</div>
-          <div class="chat-body" id="chatBody">
-            <div class="chat-empty"><p>💬</p><p>Press replay to watch agent interactions</p></div>
+          <div class="chat-header"><div class="live-dot" id="liveDot"></div> Agent Workspace</div>
+          <div class="chat-tabs">
+            <button class="chat-tab-btn active" onclick="showChatTab('debate', event)">Debate Rounds</button>
+            <button class="chat-tab-btn" onclick="showChatTab('plan', event)">Clinical Plan</button>
+            <button class="chat-tab-btn" onclick="showChatTab('evidence', event)">Data & Evidence</button>
+          </div>
+          <div id="chatTabDebate" class="chat-tab-content active">
+            <div class="chat-body" id="chatBody">
+              <div class="chat-empty"><p>💬</p><p>Press replay to watch agent interactions</p></div>
+            </div>
+          </div>
+          <div id="chatTabPlan" class="chat-tab-content">
+            <div class="chat-body" id="planBody"></div>
+          </div>
+          <div id="chatTabEvidence" class="chat-tab-content">
+            <div class="chat-body" id="evidenceBody"></div>
           </div>
         </div>
       </div>

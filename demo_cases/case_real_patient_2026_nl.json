@@ -1,0 +1,27 @@
+{
+  "case_id": "PTC-DEMO-MOD-REAL-2026-001",
+  "title": "Real Patient 2026 - Fatima (48) met CLBP en dreigende uitval",
+  "patient_profile": {
+    "name_alias": "Fatima",
+    "age": 48,
+    "gender": "vrouw",
+    "occupation": "zorgassistent verpleeghuis",
+    "work_status": "gedeeltelijk verzuim (2/5 dagen)"
+  },
+  "narrative_nl": "Ik heb al 11 maanden lage rugpijn met pieken naar 7/10. Ik til dagelijks op het werk en ben bang dat mijn rug blijvend beschadigd is. Ik slaap slecht, voel me somber en twijfel of ik moet stoppen met werken. Geen mictieproblemen, geen progressieve neurologische uitval, wel toenemende beperkingen bij lopen en bukken.",
+  "key_inputs": {
+    "pain_duration": ">12 weken",
+    "pain_intensity_nrs": 7,
+    "odi_pct": 46,
+    "tsk11": 33,
+    "pcs": 27,
+    "hads_a": 10,
+    "hads_d": 9,
+    "fabq_w_band": "hoog",
+    "sleep_disturbance": true,
+    "physical_workload": "hoog",
+    "red_flags": false,
+    "rtw_risk_cluster": "matig-hoog"
+  },
+  "demo_goal": "Toon realistische multidisciplinaire redeneercyclus: safety check, psychosociale risico's, werkgerichte dosering, en meetbare 14-daagse evaluatie met evidence gates."
+}
