@@ -25,6 +25,7 @@
 
   <nav class="nav">
     <button class="nav-btn active" onclick="showPanel('network', event)">Agent Network</button>
+    <button class="nav-btn" onclick="showPanel('how', event)">How It Works</button>
     <button class="nav-btn" onclick="showPanel('workflow', event)">Workflow</button>
     <button class="nav-btn" onclick="showPanel('value', event)">Value Story</button>
     <a class="nav-btn nav-link" href="./showcase_netherlands_impact.html">Impact Showcase</a>
@@ -203,6 +204,36 @@
         <div class="timeline-label" id="tlLabel">Waiting for replay...</div>
       </div>
       <div id="interactionInfo" class="interaction-info">Filter: none</div>
+    </div>
+
+    <div id="how" class="panel">
+      <div class="section-title">How PT-CHARLIE Works</div>
+      <div class="card-grid">
+        <div class="mini-card">
+          <h3>1. Intake & Safety First</h3>
+          <p><strong>NDT-Triage</strong> maps the patient narrative to the 47-indicator structure and runs red-flag screening before any intervention decision.</p>
+        </div>
+        <div class="mini-card">
+          <h3>2. Multi-Agent Clinical Debate</h3>
+          <p>The agents run claim/challenge/resolution rounds: <strong>Psychosocial</strong>, <strong>Pathway</strong>, <strong>Intervention</strong>, and <strong>Outcome-Auditor</strong> challenge each other’s assumptions.</p>
+        </div>
+        <div class="mini-card">
+          <h3>3. Endpoint-Specific Reasoning</h3>
+          <p>Decisions are split by endpoint: <strong>chronicity risk</strong>, <strong>RTW risk</strong>, <strong>referral/safety need</strong>, and <strong>expected response</strong>.</p>
+        </div>
+        <div class="mini-card">
+          <h3>4. 2026 Evidence Gate</h3>
+          <p>PT-CHARLIE applies MCID and validation rules (for example NRS &gt;=1.5, ODI &gt;=10), and blocks model-driven high-impact decisions without external validation.</p>
+        </div>
+        <div class="mini-card">
+          <h3>5. Personalized Plan</h3>
+          <p><strong>Intervention-Coach</strong> generates practical 2-week actions with dosage, progression, stop rules, and follow-up checkpoints.</p>
+        </div>
+        <div class="mini-card">
+          <h3>6. Outcome & Burden Reduction</h3>
+          <p><strong>Outcome-Auditor</strong> verifies quality and safety, while the system aims to reduce unnecessary referrals, shorten waits, and support first-line care in NL.</p>
+        </div>
+      </div>
     </div>
 
     <div id="workflow" class="panel">
