@@ -40,11 +40,19 @@ let connections = [];
 let pathEls = {};
 const PHASE_ORDER = ["Intake", "Risk Check", "Debate", "Plan", "Follow-up"];
 
-function showPanel(id, ev) {
+function showPanel(id, ev, opts = {}) {
+  const target = document.getElementById(id) ? id : "network";
   document.querySelectorAll(".panel").forEach((p) => p.classList.remove("active"));
   document.querySelectorAll(".nav-btn").forEach((b) => b.classList.remove("active"));
-  document.getElementById(id).classList.add("active");
+  document.getElementById(target).classList.add("active");
   if (ev && ev.currentTarget) ev.currentTarget.classList.add("active");
+  if (!ev || !ev.currentTarget) {
+    const btn = document.querySelector(`.nav .nav-btn[onclick*="showPanel('${target}'"]`);
+    if (btn) btn.classList.add("active");
+  }
+  if (opts.updateHash !== false) {
+    window.location.hash = target;
+  }
 }
 
 function setSpeed(s) {
@@ -839,6 +847,16 @@ function initKeywordGuide() {
   });
 }
 
+function initDeepLinking() {
+  const applyHash = () => {
+    const id = (window.location.hash || "").replace("#", "").trim();
+    if (!id) return;
+    if (document.getElementById(id)) showPanel(id, null, { updateHash: false });
+  };
+  window.addEventListener("hashchange", applyHash);
+  applyHash();
+}
+
 function applyScenarioAndRefresh() {
   if (!activeCase) return;
   rebuildScenario(activeCase);
@@ -923,6 +941,7 @@ window.startStoryMode = startStoryMode;
   initDebateModeSelector();
   initViewModeSelector();
   initKeywordGuide();
+  initDeepLinking();
   initSandbox();
   loadCase("moderate");
 })();
