@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PT-CHARLIE Impact Showcase NL</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <h1>PT-CHARLIE Impact Showcase: Nederland</h1>
+      </div>
+      <div class="patient-badge">
+        <div>
+          <div class="name">Case: Sanne (44) - Moderate Risk CLBP</div>
+          <div class="detail">One case, full multi-agent collaboration, burden reduction story</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <a class="nav-btn nav-link" href="./index.html">Dashboard</a>
+    <a class="nav-btn nav-link active" href="./showcase_netherlands_impact.html">Impact Showcase</a>
+    <a class="nav-btn nav-link" href="./about.html">About Ecosystem</a>
+  </nav>
+
+  <main class="content about-content">
+    <section class="about-hero">
+      <h2>Waarom deze case telt voor Nederland</h2>
+      <p>
+        Deze showcase laat in een realistische CLBP-case zien hoe PT-CHARLIE agents samenwerken:
+        sneller triëren, zorgpad personaliseren, onnodige verwijzingen beperken en professionals ontlasten.
+      </p>
+      <div class="card-grid">
+        <div class="mini-card">
+          <h3>Zorgdruk</h3>
+          <p>Minder wachttijd door vroege risicostratificatie en gerichte opvolging.</p>
+        </div>
+        <div class="mini-card">
+          <h3>Kostenimpact</h3>
+          <p>Minder onnodige MRI/doorverwijzing door expliciete safety-gates en endpoint-besluiten.</p>
+        </div>
+        <div class="mini-card">
+          <h3>Kwaliteit</h3>
+          <p>2026 evidence gates: MCID-targets + externe validatie verplicht voor modelgedreven keuzes.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="about-card">
+      <h3>Live Agent Interaction Map + Debate Transcript</h3>
+      <p style="margin-bottom:.6rem;color:#9eadde;">
+        Embedded dashboard is preconfigured for the moderate-risk case. Use Replay Debate to watch the full multi-agent reasoning.
+      </p>
+      <iframe id="showcaseFrame" src="./index.html" title="PT-CHARLIE Live Showcase" style="width:100%;height:980px;border:1px solid var(--border);border-radius:12px;background:#080c18;"></iframe>
+    </section>
+
+    <section class="about-cta">
+      <h3>Van case naar systeemimpact</h3>
+      <p>
+        In deze flow zie je hoe klinische veiligheid, psychosociale factoren, interventiekeuze en outcome-audit samenkomen in één besluitketen
+        die de belasting op de eerstelijnszorg verlaagt.
+      </p>
+      <div class="footer-links">
+        <a href="https://physiotherapy.ai/" target="_blank" rel="noopener noreferrer">physiotherapy.ai</a>
+        <a href="https://www.elaa.nl/actueel/9-algemeen/1712-pt-charlie-slimme-zorg-voor-chronische-lage-rugpijn" target="_blank" rel="noopener noreferrer">verBETER 2024</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-card">
+      <div class="footer-topline">©2026 AVIVLY. All rights reserved.</div>
+      <div class="footer-created">
+        <span>Created with</span>
+        <span class="footer-logo" aria-label="AVIVLY Logo">
+          <img src="./assets/avivly-logo.png" alt="AVIVLY Logo" />
+        </span>
+        <span>by Aviv Hidrian</span>
+      </div>
+      <p class="footer-text">
+        PT-CHARLIE ecosystem showcase for evidence-based chronic low back pain care in the Netherlands.
+      </p>
+      <div class="footer-links">
+        <a href="./index.html">Open Main Dashboard</a>
+        <a href="mailto:avivlyweb@gmail.com">avivlyweb@gmail.com</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    window.addEventListener("load", () => {
+      const frame = document.getElementById("showcaseFrame");
+      if (!frame) return;
+      frame.addEventListener("load", () => {
+        try {
+          const w = frame.contentWindow;
+          const d = frame.contentDocument;
+          if (!w || !d) return;
+          const caseSel = d.getElementById("caseSelect");
+          const modeSel = d.getElementById("debateModeSelect");
+          const viewSel = d.getElementById("viewModeSelect");
+          if (caseSel) { caseSel.value = "moderate"; caseSel.dispatchEvent(new Event("change")); }
+          if (modeSel) { modeSel.value = "consensus"; modeSel.dispatchEvent(new Event("change")); }
+          if (viewSel) { viewSel.value = "clinical"; viewSel.dispatchEvent(new Event("change")); }
+          setTimeout(() => { if (typeof w.replayDebate === "function") w.replayDebate(); }, 700);
+        } catch (e) {
+          console.error("Showcase frame setup failed", e);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
