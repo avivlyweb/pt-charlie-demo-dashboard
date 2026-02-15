@@ -13,6 +13,19 @@ const AGENTS = {
   audit: { name: "Outcome-Auditor", role: "Quality + Value", color: "#ff5ca1", x: 190, y: 170, short: "AUD" },
 };
 
+const EVIDENCE_2026 = {
+  mcid: { nrs_points: 1.5, nrs_percent: 40, rmdq_points: 3.5, odi_points: 10 },
+  odds_ratios: {
+    older_age_rtw: 0.58,
+    preop_sick_leave: 0.95,
+    not_working_preop: 0.45,
+    depression_anxiety_min: 1.4,
+    psychosocial_workload: 1.32,
+  },
+  auc_targets: { min: 0.7, good: 0.75, strong: 0.8 },
+  validation_rule: "External validation required for prognostic model-driven decisions.",
+};
+
 let activeCase = null;
 let speedMultiplier = 1;
 let running = false;
@@ -66,6 +79,15 @@ function getDecisionType(from) {
   return "Synthesis";
 }
 
+function getEndpointTag(type, phase) {
+  if (type === "Safety Check") return "Referral/Safety";
+  if (type === "Psychosocial Lens") return "Chronicity";
+  if (type === "Exercise Plan") return "Response";
+  if (type === "Quality Gate") return phase === "Plan" ? "RTW/Value" : "Quality";
+  if (type === "Pathway Logic") return "Pathway";
+  return phase === "Follow-up" ? "Reassessment" : "Synthesis";
+}
+
 function getEvidenceAnchor(type) {
   if (type === "Safety Check") return "Nijmeegse beslisboom + red-flag screening";
   if (type === "Psychosocial Lens") return "KNGF psychosocial stratificatie + gedrag";
@@ -98,6 +120,7 @@ function enrichInteractions(items, caseData) {
       n: idx + 1,
       phase,
       type,
+      endpoint: getEndpointTag(type, phase),
       evidence: getEvidenceAnchor(type),
       patient_text: toPatientLanguage({ ...it, type }, caseData),
     };
@@ -548,6 +571,7 @@ function renderTranscript(items) {
         <span class="chat-target">${to.name}</span>
         <span class="chat-tag">${item.phase}</span>
         <span class="chat-tag">${item.type}</span>
+        <span class="chat-tag">${item.endpoint}</span>
         <span class="chat-num">#${item.n}</span>
       </div>
       <div class="chat-bubble challenge"><span class="chat-title">Claim / Challenge</span>${challengeText}</div>
@@ -648,7 +672,10 @@ function renderStats(caseData) {
     [String(rejected), "Rejected"],
     [String(k.pain_intensity_nrs || "-"), "Pain NRS"],
     [String(k.odi_pct || "-"), "ODI"],
+    [String(EVIDENCE_2026.mcid.nrs_points), "NRS MCID"],
+    [String(EVIDENCE_2026.mcid.odi_points), "ODI MCID"],
     [k.red_flags ? "YES" : "NO", "Red Flags"],
+    ["REQUIRED", "Ext Validation"],
   ];
   document.getElementById("statsStrip").innerHTML = rows.map(([v, l]) => `<div class="stat-chip"><span class="val">${v}</span> ${l}</div>`).join("");
 }
@@ -667,9 +694,11 @@ function renderWorkflow(caseData) {
 
   const cards = [
     ["Real-Person Intake", `${person.name_alias} (${person.age}), ${person.occupation}. ${caseData.narrative_nl}`],
-    ["Clinical Reasoning", `NDT-indicator mapping en red-flag gate eerst. Debatmodus: ${getDebateModeLabel(debateMode)}.`],
+    ["Clinical Reasoning", `NDT-indicator mapping met endpoint-gericht debat (chronicity, RTW, referral, response). Debatmodus: ${getDebateModeLabel(debateMode)}.`],
     ["Care Pathway", careDecision],
     ["Debate Quality", `${acceptedRate}% van interacties geaccepteerd na challenge-response cyclus. Beslissingen zijn expliciet gekoppeld aan consequenties.`],
+    ["2026 Benchmarks", `MCID: NRS >=${EVIDENCE_2026.mcid.nrs_points} (of ${EVIDENCE_2026.mcid.nrs_percent}%), ODI >=${EVIDENCE_2026.mcid.odi_points}. AUC target >=${EVIDENCE_2026.auc_targets.good}.`],
+    ["Model Validity Gate", EVIDENCE_2026.validation_rule],
   ];
 
   document.getElementById("workflowCards").innerHTML = cards.map(([t, d]) => `<div class="mini-card"><h3>${t}</h3><p>${d}</p></div>`).join("");
@@ -698,6 +727,7 @@ function renderValueStory(caseData) {
       <li>Efficientie: snellere triage en minder ongerichte doorverwijzingen.</li>
       <li>Kwaliteit: expliciete red-flag gating en meetbare follow-upmomenten.</li>
       <li>Debatmodus: ${modeMsg}</li>
+      <li>Evidence gate 2026: geen model-gedreven besluit zonder externe validatie.</li>
       <li>Visie 2030 fit: digitale zelfzorg waar mogelijk, professionele escalatie waar nodig (${red ? "geactiveerd" : "stand-by"}).</li>
     </ul>
   `;
@@ -713,7 +743,7 @@ function renderPatientSummary(caseData) {
       ? "Vandaag: rustig opbouwen, ergonomie toepassen, dag 14 herbeoordeling."
       : "Vandaag: lichte opbouw, actief blijven, korte follow-up.";
   const text = viewMode === "clinical"
-    ? `Risk: ${risk.toUpperCase()} • Active mode: ${getDebateModeLabel(debateMode)} • Latest phase: ${latest ? latest.phase : "-"}`
+    ? `Risk: ${risk.toUpperCase()} • Mode: ${getDebateModeLabel(debateMode)} • Phase: ${latest ? latest.phase : "-"} • MCID NRS>=${EVIDENCE_2026.mcid.nrs_points}, ODI>=${EVIDENCE_2026.mcid.odi_points}`
     : `Jouw samenvatting: ${safeAction}`;
   document.getElementById("caseDetail").textContent = `${caseData.patient_profile.name_alias}, ${caseData.patient_profile.age} jaar • ${text}`;
 }
